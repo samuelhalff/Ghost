@@ -530,10 +530,10 @@
   dependencies:
     "@tryghost/errors" "^0.2.13"
 
-"@tryghost/admin-api-schema@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@tryghost/admin-api-schema/-/admin-api-schema-2.5.0.tgz#8ac3dccff3428197745032e4fda07d781464397f"
-  integrity sha512-8LyI2/weIN8js3Wg+LIfPygG/tSRijqrBEbJ0bEroPkm+27oF7MfAj+vSAzHj65G6cBP8lIUetGPNO2U+nHjPw==
+"@tryghost/admin-api-schema@2.5.1":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@tryghost/admin-api-schema/-/admin-api-schema-2.5.1.tgz#b23942a4608f99fbf0d0787edfaff5d8ee23ff75"
+  integrity sha512-xIRoeO0Kklruhzs+buHnj7iKcWWPDmR/FD7O9lp8eEjtgyOOQ2+ZiUZ0QM207EcjJrIwaFMQ0voaL9BRFXEEiQ==
   dependencies:
     "@tryghost/errors" "^0.2.10"
     lodash "^4.17.11"
