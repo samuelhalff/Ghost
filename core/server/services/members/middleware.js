@@ -4,25 +4,43 @@ const membersService = require('./service');
 const urlUtils = require('../../../shared/url-utils');
 const ghostVersion = require('@tryghost/version');
 const settingsCache = require('../../../shared/settings-cache');
-const {formattedMemberResponse} = require('./utils');
+const { formattedMemberResponse } = require('./utils');
 const labsService = require('../../../shared/labs');
 const config = require('../../../shared/config');
+const cookies = require("./security/cookies");
 
 // @TODO: This piece of middleware actually belongs to the frontend, not to the member app
 // Need to figure a way to separate these things (e.g. frontend actually talks to members API)
-const loadMemberSession = async function (req, res, next) {
+const loadMemberSession = async function(req, res, next) {
     try {
-        const member = await membersService.ssr.getMemberDataFromSession(req, res);
-        Object.assign(req, {member});
+        const sessionCookie = req
+            .get("Cookie")
+            .split(";")
+            .find(
+                (cookie) =>
+                cookie.trim().startsWith("session=") && cookie.trim().length > 10
+            );
+        if (!sessionCookie) {
+            throw "Token is empty, please log in before interacting with gql";
+        }
+
+        const userId = await cookies.getUserIdFromCookies(
+            sessionCookie.split("=")[1]
+        );
+        if (!userId) {
+            throw "Missing user id";
+        }
+
+        Object.assign(req, { member: userId });
         res.locals.member = req.member;
         next();
     } catch (err) {
-        Object.assign(req, {member: null});
+        Object.assign(req, { member: null });
         next();
     }
 };
 
-const getIdentityToken = async function (req, res) {
+const getIdentityToken = async function(req, res) {
     try {
         const token = await membersService.ssr.getIdentityTokenForMemberFromSession(req, res);
         res.writeHead(200);
@@ -33,7 +51,7 @@ const getIdentityToken = async function (req, res) {
     }
 };
 
-const deleteSession = async function (req, res) {
+const deleteSession = async function(req, res) {
     try {
         await membersService.ssr.deleteSession(req, res);
         res.writeHead(204);
@@ -44,7 +62,7 @@ const deleteSession = async function (req, res) {
     }
 };
 
-const getMemberData = async function (req, res) {
+const getMemberData = async function(req, res) {
     try {
         const member = await membersService.ssr.getMemberDataFromSession(req, res);
         if (member) {
@@ -58,7 +76,7 @@ const getMemberData = async function (req, res) {
     }
 };
 
-const updateMemberData = async function (req, res) {
+const updateMemberData = async function(req, res) {
     try {
         const data = _.pick(req.body, 'name', 'subscribed');
         const member = await membersService.ssr.getMemberDataFromSession(req, res);
@@ -79,7 +97,7 @@ const updateMemberData = async function (req, res) {
     }
 };
 
-const getPortalProductPrices = async function () {
+const getPortalProductPrices = async function() {
     const page = await membersService.api.productRepository.list({
         withRelated: ['monthlyPrice', 'yearlyPrice', 'benefits']
     });
@@ -116,7 +134,7 @@ const getPortalProductPrices = async function () {
     };
 };
 
-const getMemberSiteData = async function (req, res) {
+const getMemberSiteData = async function(req, res) {
     const isStripeConfigured = membersService.config.isStripeConnected();
     const domain = urlUtils.urlFor('home', true).match(new RegExp('^https?://([^/:?#]+)(?:[/:?#]|$)', 'i'));
     const firstpromoterId = settingsCache.get('firstpromoter') ? settingsCache.get('firstpromoter_id') : '';
@@ -125,7 +143,7 @@ const getMemberSiteData = async function (req, res) {
     if (!supportAddress.includes('@')) {
         supportAddress = `${supportAddress}@${blogDomain}`;
     }
-    const {products = [], prices = []} = await getPortalProductPrices() || {};
+    const { products = [], prices = [] } = await getPortalProductPrices() || {};
     const portalVersion = config.get('portal:version');
 
     const response = {
@@ -162,10 +180,10 @@ const getMemberSiteData = async function (req, res) {
             env: config.get('env')
         };
     }
-    res.json({site: response});
+    res.json({ site: response });
 };
 
-const createSessionFromMagicLink = async function (req, res, next) {
+const createSessionFromMagicLink = async function(req, res, next) {
     if (!req.url.includes('token=')) {
         return next();
     }
