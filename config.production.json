@@ -8,9 +8,13 @@
         "host": "0.0.0.0"
     },
     "database": {
-        "client": "sqlite3",
+        "client": "mysql",
         "connection": {
-            "filename": "/var/lib/ghost/content/data/ghost.db"
+            "host": "ghost-mysql",
+            "port": 3306,
+            "user": "root",
+            "password": "ketl-help",
+            "database": "ghost"
         }
     },
     "mail": {
@@ -22,5 +26,8 @@
     "process": "local",
     "paths": {
         "contentPath": "/var/lib/ghost/content"
+    },
+    "imageOptimization": {
+        "resize": false
     }
 }
