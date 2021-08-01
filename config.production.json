@@ -1,0 +1,26 @@
+{
+    "url": "http://localhost/help",
+    "admin": {
+        "url": "http://localhost/help"
+    },
+    "server": {
+        "port": 2368,
+        "host": "0.0.0.0"
+    },
+    "database": {
+        "client": "sqlite3",
+        "connection": {
+            "filename": "/var/lib/ghost/content/data/ghost.db"
+        }
+    },
+    "mail": {
+        "transport": "Direct"
+    },
+    "logging": {
+        "transports": ["stdout"]
+    },
+    "process": "local",
+    "paths": {
+        "contentPath": "/var/lib/ghost/content"
+    }
+}
