@@ -19,7 +19,7 @@ module.exports = {
         {
             files: 'core/server/api/canary/*',
             rules: {
-                'ghost/ghost-custom/max-api-complexity': 'warn'
+                'ghost/ghost-custom/max-api-complexity': 'error'
             }
         },
         {
@@ -31,10 +31,16 @@ module.exports = {
                         message: 'Invalid require of core/server from core/shared.'
                     },
                     {
-                        name: path.resolve(__dirname, 'core/server/**'),
+                        name: path.resolve(__dirname, 'core/frontend/**'),
                         message: 'Invalid require of core/frontend from core/shared.'
                     }
                 ]]
+            }
+        },
+        {
+            files: 'core/server/api/**/utils/validators/**/index.js',
+            rules: {
+                'max-lines': ['off']
             }
         },
         /**
@@ -44,8 +50,14 @@ module.exports = {
             files: 'core/frontend/**',
             rules: {
                 'ghost/node/no-restricted-require': ['off', [
+                    // If we make the frontend entirely independent, these have to be solved too
+                    // {
+                    //     name: path.resolve(__dirname, 'core/shared/**'),
+                    //     message: 'Invalid require of core/shared from core/frontend.'
+                    // },
+                    // These are critical refactoring issues that we need to tackle ASAP
                     {
-                        name: path.resolve(__dirname, 'core/server/**'),
+                        name: [path.resolve(__dirname, 'core/server/**')],
                         message: 'Invalid require of core/server from core/frontend.'
                     }
                 ]]
@@ -54,9 +66,10 @@ module.exports = {
         {
             files: 'core/server/**',
             rules: {
-                'ghost/node/no-restricted-require': ['off', [
+                'ghost/node/no-restricted-require': ['warn', [
                     {
-                        name: path.resolve(__dirname, 'core/frontend/**'),
+                        // Throw an error for all requires of the frontend, _except_ the url service which will be moved soon
+                        name: [path.resolve(__dirname, 'core/frontend/**')],
                         message: 'Invalid require of core/frontend from core/server.'
                     }
                 ]]

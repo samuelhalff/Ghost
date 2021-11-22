@@ -1,6 +1,5 @@
 const _ = require('lodash');
 const Promise = require('bluebird');
-const SafeString = require('express-hbs').SafeString;
 const errors = require('@tryghost/errors');
 const logging = require('@tryghost/logging');
 const tpl = require('@tryghost/tpl');
@@ -14,32 +13,51 @@ const messages = {
     errorHelp: 'See {url}'
 };
 
+// flags in this list always return `true`, allows quick global enable prior to full flag removal
+const GA_FEATURES = [
+    'customThemeSettings'
+];
+
 // NOTE: this allowlist is meant to be used to filter out any unexpected
 //       input for the "labs" setting value
 const BETA_FEATURES = [
     'activitypub',
-    'matchHelper'
+    'multipleProducts'
 ];
 
 const ALPHA_FEATURES = [
-    'emailCardSegments',
-    'multipleProducts',
-    'savedIndicator',
-    'featureImgDragDrop',
-    'checkEmailList',
     'oauthLogin',
-    'membersFiltering'
+    'membersActivity',
+    'cardSettingsPanel',
+    'urlCache',
+    'mediaAPI',
+    'filesAPI',
+    'membersAutoLogin',
+    'buttonCard',
+    'calloutCard',
+    'nftCard',
+    'accordionCard',
+    'gifsCard',
+    'fileCard',
+    'audioCard',
+    'videoCard',
+    'productCard'
 ];
 
+module.exports.GA_KEYS = [...GA_FEATURES];
 module.exports.WRITABLE_KEYS_ALLOWLIST = [...BETA_FEATURES, ...ALPHA_FEATURES];
 
 module.exports.getAll = () => {
     const labs = _.cloneDeep(settingsCache.get('labs')) || {};
 
     ALPHA_FEATURES.forEach((alphaKey) => {
-        if (labs[alphaKey] && !(config.get('enableDeveloperExperiments') || process.env.NODE_ENV.match(/^testing/))) {
+        if (labs[alphaKey] && !(config.get('enableDeveloperExperiments') || process.env.NODE_ENV.startsWith('test'))) {
             delete labs[alphaKey];
         }
+    });
+
+    GA_FEATURES.forEach((gaKey) => {
+        labs[gaKey] = true;
     });
 
     labs.members = settingsCache.get('members_signup_access') !== 'none';
@@ -60,7 +78,7 @@ module.exports.isSet = function isSet(flag) {
 /**
  *
  * @param {object} options
- * @param {string} options.flagKey the interal lookup key of the flag e.g. labs.isSet(matchHelper)
+ * @param {string} options.flagKey the internal lookup key of the flag e.g. labs.isSet(matchHelper)
  * @param {string} options.flagName the user-facing name of the flag e.g. Match helper
  * @param {string} options.helperName Name of the helper to be enabled/disabled
  * @param {string} [options.errorMessage] Optional replacement error message
@@ -81,7 +99,7 @@ module.exports.enabledHelper = function enabledHelper(options, callback) {
     }
 
     // Else, the helper is not active and we need to handle this as an error
-    errDetails.message = tpl(options.errorMessage || messages.errorMessage, {helperName: options.helperName}),
+    errDetails.message = tpl(options.errorMessage || messages.errorMessage, {helperName: options.helperName});
     errDetails.context = tpl(options.errorContext || messages.errorContext, {
         helperName: options.helperName,
         flagName: options.flagName
@@ -90,6 +108,7 @@ module.exports.enabledHelper = function enabledHelper(options, callback) {
 
     logging.error(new errors.DisabledFeatureError(errDetails));
 
+    const {SafeString} = require('express-hbs');
     errString = new SafeString(`<script>console.error("${_.values(errDetails).join(' ')}");</script>`);
 
     if (options.async) {
@@ -100,7 +119,7 @@ module.exports.enabledHelper = function enabledHelper(options, callback) {
 };
 
 module.exports.enabledMiddleware = flag => (req, res, next) => {
-    if (this.isSet(flag) === true) {
+    if (module.exports.isSet(flag) === true) {
         return next();
     } else {
         return next(new errors.NotFoundError());

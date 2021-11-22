@@ -4,6 +4,7 @@ const apiMw = require('../../middleware');
 const mw = require('./middleware');
 
 const shared = require('../../../shared');
+const labs = require('../../../../../shared/labs');
 
 module.exports = function apiRoutes() {
     const router = express.Router('canary admin');
@@ -97,6 +98,12 @@ module.exports = function apiRoutes() {
     router.get('/members', mw.authAdminApi, http(api.members.browse));
     router.post('/members', mw.authAdminApi, http(api.members.add));
     router.del('/members', mw.authAdminApi, http(api.members.bulkDestroy));
+    router.put('/members/bulk', mw.authAdminApi, http(api.members.bulkEdit));
+
+    router.get('/offers', mw.authAdminApi, http(api.offers.browse));
+    router.post('/offers', mw.authAdminApi, http(api.offers.add));
+    router.get('/offers/:id', mw.authAdminApi, http(api.offers.read));
+    router.put('/offers/:id', mw.authAdminApi, http(api.offers.edit));
 
     router.get('/members/stats/count', mw.authAdminApi, http(api.members.memberStats));
     router.get('/members/stats/mrr', mw.authAdminApi, http(api.members.mrrStats));
@@ -197,8 +204,8 @@ module.exports = function apiRoutes() {
     router.get('/session', mw.authAdminApi, http(api.session.read));
     // We don't need auth when creating a new session (logging in)
     router.post('/session',
-        shared.middlewares.brute.globalBlock,
-        shared.middlewares.brute.userLogin,
+        shared.middleware.brute.globalBlock,
+        shared.middleware.brute.userLogin,
         http(api.session.add)
     );
     router.del('/session', mw.authAdminApi, http(api.session.delete));
@@ -208,11 +215,11 @@ module.exports = function apiRoutes() {
 
     // ## Authentication
     router.post('/authentication/passwordreset',
-        shared.middlewares.brute.globalReset,
-        shared.middlewares.brute.userReset,
+        shared.middleware.brute.globalReset,
+        shared.middleware.brute.userReset,
         http(api.authentication.generateResetToken)
     );
-    router.put('/authentication/passwordreset', shared.middlewares.brute.globalBlock, http(api.authentication.resetPassword));
+    router.put('/authentication/passwordreset', shared.middleware.brute.globalBlock, http(api.authentication.resetPassword));
     router.post('/authentication/invitation', http(api.authentication.acceptInvitation));
     router.get('/authentication/invitation', http(api.authentication.isInvitation));
     router.post('/authentication/setup', http(api.authentication.setup));
@@ -227,6 +234,30 @@ module.exports = function apiRoutes() {
         apiMw.upload.validation({type: 'images'}),
         apiMw.normalizeImage,
         http(api.images.upload)
+    );
+
+    // ## media
+    router.post('/media/upload',
+        labs.enabledMiddleware('mediaAPI'),
+        mw.authAdminApi,
+        apiMw.upload.media('file', 'thumbnail'),
+        apiMw.upload.mediaValidation({type: 'media'}),
+        http(api.media.upload)
+    );
+    router.put('/media/thumbnail/upload',
+        labs.enabledMiddleware('mediaAPI'),
+        mw.authAdminApi,
+        apiMw.upload.single('file'),
+        apiMw.upload.validation({type: 'images'}),
+        http(api.media.uploadThumbnail)
+    );
+
+    // ## files
+    router.post('/files/upload',
+        labs.enabledMiddleware('filesAPI'),
+        mw.authAdminApi,
+        apiMw.upload.single('file'),
+        http(api.files.upload)
     );
 
     // ## Invites
@@ -270,6 +301,10 @@ module.exports = function apiRoutes() {
     router.post('/snippets', mw.authAdminApi, http(api.snippets.add));
     router.put('/snippets/:id', mw.authAdminApi, http(api.snippets.edit));
     router.del('/snippets/:id', mw.authAdminApi, http(api.snippets.destroy));
+
+    // ## Custom theme settings
+    router.get('/custom_theme_settings', mw.authAdminApi, labs.enabledMiddleware('customThemeSettings'), http(api.customThemeSettings.browse));
+    router.put('/custom_theme_settings', mw.authAdminApi, labs.enabledMiddleware('customThemeSettings'), http(api.customThemeSettings.edit));
 
     return router;
 };

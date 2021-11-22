@@ -1,3 +1,4 @@
+const stripeService = require('../stripe');
 const settingsCache = require('../../../shared/settings-cache');
 const MembersApi = require('@tryghost/members-api');
 const logging = require('@tryghost/logging');
@@ -9,6 +10,8 @@ const subscribeEmail = require('./emails/subscribe');
 const updateEmail = require('./emails/updateEmail');
 const SingleUseTokenProvider = require('./SingleUseTokenProvider');
 const urlUtils = require('../../../shared/url-utils');
+const labsService = require('../../../shared/labs');
+const offersService = require('../offers');
 
 const MAGIC_LINK_TOKEN_VALIDITY = 24 * 60 * 60 * 1000;
 
@@ -67,7 +70,6 @@ function createApiInstance(config) {
                         For your security, the link will expire in 24 hours time.
 
                         All the best!
-                        The team at ${siteTitle}
 
                         ---
 
@@ -78,14 +80,13 @@ function createApiInstance(config) {
                     return `
                         Hey there!
 
-                        Thanks for signing up for ${siteTitle} — use this link to complete the sign up process and be automatically signed in:
+                        Tap the link below to complete the signup process for ${siteTitle}, and be automatically signed in:
 
                         ${url}
 
                         For your security, the link will expire in 24 hours time.
 
                         See you soon!
-                        The team at ${siteTitle}
 
                         ---
 
@@ -119,7 +120,6 @@ function createApiInstance(config) {
                         For your security, the link will expire in 24 hours time.
 
                         See you soon!
-                        The team at ${siteTitle}
 
                         ---
 
@@ -175,12 +175,19 @@ function createApiInstance(config) {
             MemberEmailChangeEvent: models.MemberEmailChangeEvent,
             MemberPaymentEvent: models.MemberPaymentEvent,
             MemberStatusEvent: models.MemberStatusEvent,
+            MemberProductEvent: models.MemberProductEvent,
+            MemberAnalyticEvent: models.MemberAnalyticEvent,
+            OfferRedemption: models.OfferRedemption,
+            Offer: models.Offer,
             StripeProduct: models.StripeProduct,
             StripePrice: models.StripePrice,
             Product: models.Product,
             Settings: models.Settings
         },
-        logger: logging
+        stripeAPIService: stripeService.api,
+        logger: logging,
+        offersAPI: offersService.api,
+        labsService: labsService
     });
 
     return membersApiInstance;

@@ -1,11 +1,15 @@
 const models = require('../../models');
-const i18n = require('../../../shared/i18n');
+const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
-const urlUtils = require('../../../shared/url-utils');
-const {mega} = require('../../services/mega');
-const {BadRequestError} = require('@tryghost/errors');
+const getPostServiceInstance = require('../../services/posts/posts-service');
 const allowedIncludes = ['tags', 'authors', 'authors.roles', 'email'];
 const unsafeAttrs = ['status', 'authors', 'visibility'];
+
+const messages = {
+    postNotFound: 'Post not found.'
+};
+
+const postsService = getPostServiceInstance('v3');
 
 module.exports = {
     docName: 'posts',
@@ -73,7 +77,7 @@ module.exports = {
                 .then((model) => {
                     if (!model) {
                         throw new errors.NotFoundError({
-                            message: i18n.t('errors.api.posts.postNotFound')
+                            message: tpl(messages.postNotFound)
                         });
                     }
 
@@ -151,82 +155,10 @@ module.exports = {
             unsafeAttrs: unsafeAttrs
         },
         async query(frame) {
-            let model;
-            if (!frame.options.email_recipient_filter && frame.options.send_email_when_published) {
-                await models.Base.transaction(async (transacting) => {
-                    const options = {
-                        ...frame.options,
-                        transacting
-                    };
+            let model = await postsService.editPost(frame);
 
-                    /**
-                     * 1. We need to edit the post first in order to know what the visibility is.
-                     * 2. We can only pass the email_recipient_filter when we change the status.
-                     *
-                     * So, we first edit the post as requested, with all information except the status,
-                     * from there we can determine what the email_recipient_filter should be and then finish
-                     * the edit, with the status and the email_recipient_filter option.
-                     */
-                    const status = frame.data.posts[0].status;
-                    delete frame.data.posts[0].status;
-                    const interimModel = await models.Post.edit(frame.data.posts[0], options);
-                    frame.data.posts[0].status = status;
+            this.headers.cacheInvalidate = postsService.handleCacheInvalidation(model);
 
-                    options.email_recipient_filter = interimModel.get('visibility') === 'paid' ? 'paid' : 'all';
-
-                    model = await models.Post.edit(frame.data.posts[0], options);
-                });
-            } else {
-                model = await models.Post.edit(frame.data.posts[0], frame.options);
-            }
-
-            /**Handle newsletter email */
-            const emailRecipientFilter = model.get('email_recipient_filter');
-            if (emailRecipientFilter !== 'none') {
-                if (emailRecipientFilter !== 'all') {
-                    // check filter is valid
-                    try {
-                        await models.Member.findPage({filter: `subscribed:true+${emailRecipientFilter}`, limit: 1});
-                    } catch (err) {
-                        return Promise.reject(new BadRequestError({
-                            message: i18n.t('errors.api.posts.invalidEmailRecipientFilter'),
-                            context: err.message
-                        }));
-                    }
-                }
-
-                const postPublished = model.wasChanged() && (model.get('status') === 'published') && (model.previous('status') !== 'published');
-                if (postPublished) {
-                    let postEmail = model.relations.email;
-
-                    if (!postEmail) {
-                        const email = await mega.addEmail(model, Object.assign({}, frame.options, {apiVersion: 'v3'}));
-                        model.set('email', email);
-                    } else if (postEmail && postEmail.get('status') === 'failed') {
-                        const email = await mega.retryFailedEmail(postEmail);
-                        model.set('email', email);
-                    }
-                }
-            }
-
-            /**Handle cache invalidation */
-            if (
-                model.get('status') === 'published' && model.wasChanged() ||
-                model.get('status') === 'draft' && model.previous('status') === 'published'
-            ) {
-                this.headers.cacheInvalidate = true;
-            } else if (
-                model.get('status') === 'draft' && model.previous('status') !== 'published' ||
-                model.get('status') === 'scheduled' && model.wasChanged()
-            ) {
-                this.headers.cacheInvalidate = {
-                    value: urlUtils.urlFor({
-                        relativeUrl: urlUtils.urlJoin('/p', model.get('uuid'), '/')
-                    })
-                };
-            } else {
-                this.headers.cacheInvalidate = false;
-            }
             return model;
         }
     },
@@ -260,7 +192,7 @@ module.exports = {
                 .then(() => null)
                 .catch(models.Post.NotFoundError, () => {
                     return Promise.reject(new errors.NotFoundError({
-                        message: i18n.t('errors.api.posts.postNotFound')
+                        message: tpl(messages.postNotFound)
                     }));
                 });
         }

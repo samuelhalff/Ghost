@@ -4,9 +4,14 @@ const express = require('../../../shared/express');
 const compress = require('compression');
 const mw = require('./middleware');
 const vhost = require('@tryghost/vhost-middleware');
-const vhostUtils = require('./vhost-utils');
 
-module.exports = function setupParentApp(options = {}) {
+/**
+ * @param {Object} options
+ * @param {Boolean} [options.start]
+ * @param {Boolean} [options.backend]
+ * @param {Boolean} [options.frontend]
+ */
+module.exports = function setupParentApp({start, frontend = true, backend = true}) {
     debug('ParentApp setup start');
     const parentApp = express('parent');
 
@@ -27,14 +32,17 @@ module.exports = function setupParentApp(options = {}) {
 
     // Mount the express apps on the parentApp
 
-    // ADMIN + API
-    const backendApp = require('./backend')();
-    parentApp.use(vhost(vhostUtils.getBackendHostArg(), backendApp));
+    if (backend) {
+        debug('Mounting bakcend: ADMIN + API');
+        const backendApp = require('./backend')();
+        parentApp.use(vhost(config.getBackendMountPath(), backendApp));
+    }
 
-    // SITE + MEMBERS
-    const frontendApp = require('./frontend')(options);
-    parentApp.use(vhost(vhostUtils.getFrontendHostArg(), frontendApp));
-
+    if (frontend) {
+        debug('Mounting frontend: SITE + MEMBERS');
+        const frontendApp = require('./frontend')({start});
+        parentApp.use(vhost(config.getFrontendMountPath(), frontendApp));
+    }
     debug('ParentApp setup end');
 
     return parentApp;

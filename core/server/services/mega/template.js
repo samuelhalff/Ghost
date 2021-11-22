@@ -74,6 +74,10 @@ table td {
     max-width: 600px;
 }
 
+.content a { 
+    overflow-wrap: anywhere; 
+}
+
 /* -------------------------------------
     POST CONTENT
 ------------------------------------- */
@@ -173,7 +177,7 @@ blockquote cite a {
 }
 
 a {
-    color: #15212A;
+    color: ${templateSettings.accentColor || '#15212A'};
     text-decoration: none;
 }
 
@@ -300,6 +304,10 @@ figure blockquote p {
     padding-bottom: 50px;
 }
 
+.site-title {
+    color: #15212A;
+}
+
 .post-title {
     padding-bottom: 10px;
     font-size: 42px;
@@ -386,7 +394,7 @@ figure blockquote p {
 
 .post-content a,
 .post-content-sans-serif a {
-    color: #08121A;
+    color: ${templateSettings.accentColor || '#08121A'};
     text-decoration: underline;
 }
 
@@ -509,10 +517,12 @@ figure blockquote p {
     display: block;
     text-decoration: none !important;
 }
+
 .kg-video-preview table {
     background-size: cover;
     min-height: 200px; /* for when images aren't loaded */
 }
+
 .kg-video-play-button {
     height: 2em;
     width: 3em;
@@ -522,6 +532,7 @@ figure blockquote p {
     font-size: 1em; /* change this to resize */
     background-color: rgba(0,0,0,0.85);
 }
+
 .kg-video-play-button div {
     display: block;
     width: 0;
@@ -533,6 +544,76 @@ figure blockquote p {
     border-width: 0.8em 0 0.8em 1.5em;
 }
 
+.kg-nft-link {
+    display: block; 
+    text-decoration: none !important; 
+    color: #15212A !important; 
+    font-family: inherit !important;
+    font-size: 14px;
+    line-height: 1.3em;
+    padding-top: 4px; 
+    padding-right: 20px; 
+    padding-left: 20px; 
+    padding-bottom: 4px;
+}
+
+.kg-card-callout {
+    display: flex;
+    margin: 0 0 1.5em 0;
+    padding: 20px 28px;
+    border-radius: 3px;
+}
+
+.kg-card-callout p {
+    margin: 0
+}
+
+.kg-card-callout-grey {
+    background: #eef0f2;
+}
+
+.kg-card-callout-white {
+    background: #fff;
+    box-shadow: inset 0 0 0 1px #dddedf;
+}
+
+.kg-card-callout-blue {
+    background: #E9F6FB;
+}
+
+.kg-card-callout-green {
+    background: #E8F8EA;
+}
+
+.kg-card-callout-yellow {
+    background: #FCF4E3;
+}
+
+.kg-card-callout-red {
+    background: #FBE9E9;
+}
+
+.kg-card-callout-pink {
+    background: #FCEEF8;
+}
+
+.kg-card-callout-purple {
+    background: #F2EDFC;
+}
+
+.kg-card-callout-accent {
+    background: ${templateSettings.accentColor || '#15212A'};
+    color: #fff;
+}
+
+.kg-card-callout-accent a {
+    color: #fff;
+}
+
+.kg-callout-emoji {
+    padding-right: 12px;
+    font-size: 20px;
+}
 
 /* -------------------------------------
     HEADER, FOOTER, MAIN
@@ -576,6 +657,7 @@ figure blockquote p {
 .btn {
     box-sizing: border-box;
     width: 100%;
+    display: table;
 }
 
 .btn>tbody>tr>td {
@@ -605,7 +687,6 @@ figure blockquote p {
     margin: 0;
     padding: 12px 25px;
     text-decoration: none;
-    text-transform: capitalize;
 }
 
 .btn-primary table td {
@@ -616,6 +697,16 @@ figure blockquote p {
     background-color: #3498db;
     border-color: #3498db;
     color: #ffffff;
+}
+
+.btn-accent table td {
+    background-color: ${templateSettings.adjustedAccentColor || '#3498db'};
+}
+
+.btn-accent a {
+    background-color: ${templateSettings.adjustedAccentColor || '#3498db'};
+    border-color: ${templateSettings.adjustedAccentColor || '#3498db'};
+    color: ${templateSettings.adjustedAccentContrastColor || '#ffffff'};
 }
 
 /* -------------------------------------
@@ -925,7 +1016,7 @@ ${ templateSettings.showBadge ? `
                                                 ` : ``}
                                                 ${ templateSettings.showHeaderTitle ? `
                                                 <tr>
-                                                    <td class="site-url"><div style="width: 100% !important;"><a href="${site.url}">${site.title}</a></div></td>
+                                                    <td class="site-url"><div style="width: 100% !important;"><a href="${site.url}" class="site-title">${site.title}</a></div></td>
                                                 </tr>
                                                 ` : ``}
                                             </table>

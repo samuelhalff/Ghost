@@ -72,7 +72,7 @@ Check out our [official documentation](https://ghost.org/docs/) for more informa
 
 ### Contributors & Advanced Developers
 
-For anyone wishing to contribute to Ghost or to hack/customise core files we recommend following our full development setup guides: [Contributor Guide](https://ghost.org/docs/contributing/) | [Developer Setup](https://ghost.org/docs/install/source/) | [Admin Client Dev Guide](https://ghost.org/docs/install/source/#ghost-admin)
+For anyone wishing to contribute to Ghost or to hack/customize core files we recommend following our full development setup guides: [Contributor Guide](https://ghost.org/docs/contributing/) | [Developer Setup](https://ghost.org/docs/install/source/) | [Admin Client Dev Guide](https://ghost.org/docs/install/source/#ghost-admin)
 
 &nbsp;
 
@@ -80,7 +80,7 @@ For anyone wishing to contribute to Ghost or to hack/customise core files we rec
 
 We'd like to extend big thanks to our sponsors and partners who make Ghost possible. If you're interested in sponsoring Ghost and supporting the project, please check out our profile on [GitHub Sponsors](https://github.com/sponsors/TryGhost) :heart:
 
-**[DigitalOcean](https://digitalocean.com)** | **[Cloudflare](https://cloudflare.com)**
+**[DigitalOcean](https://digitalocean.com)** | **[Fastly](https://www.fastly.com/)**
 
 &nbsp;
 

@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const logging = require('@tryghost/logging');
 const membersService = require('./service');
+const offersService = require('../offers/service');
 const urlUtils = require('../../../shared/url-utils');
 const ghostVersion = require('@tryghost/version');
 const settingsCache = require('../../../shared/settings-cache');
@@ -76,7 +77,15 @@ const getMemberData = async function(req, res) {
     }
 };
 
-const updateMemberData = async function(req, res) {
+const getOfferData = async function (req, res) {
+    const offerId = req.params.id;
+    const offer = await offersService.api.getOffer({id: offerId});
+    return res.json({
+        offers: [offer]
+    });
+};
+
+const updateMemberData = async function (req, res) {
     try {
         const data = _.pick(req.body, 'name', 'subscribed');
         const member = await membersService.ssr.getMemberDataFromSession(req, res);
@@ -240,6 +249,7 @@ module.exports = {
     createSessionFromMagicLink,
     getIdentityToken,
     getMemberData,
+    getOfferData,
     updateMemberData,
     getMemberSiteData,
     deleteSession,
